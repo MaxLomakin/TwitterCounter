@@ -1,27 +1,31 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import twitter4j.Query;
-import twitter4j.Status;
-import twitter4j.Twitter;
-import twitter4j.TwitterException;
+import twitter4j.*;
 
 public class TwitterClient {
+
+    private static int pagesToLoad = 1;
+
     public static List<String> search(String search) throws Exception {
 
         Twitter twitter = new TwitterInitializer().initializeTwitter("twitter4j.properties");
 
         Query query = new Query(search);
-        query.setResultType(Query.RECENT);
+        query.setResultType(Query.ResultType.mixed);
         query.setLang("en");
         query.setCount(100);
 
         try {
-            List<Status> tweets = twitter.search(query).getTweets();
-            List<String> texts = new ArrayList<String>(tweets.size());
+            QueryResult result = twitter.search(query);
+            List<String> texts = new ArrayList<String>();
 
-            for (Status tweet : tweets) {
-                texts.add(tweet.getText());
+            for (int i = 0; i < pagesToLoad && result.hasNext(); i++) {
+                List<Status> tweets = result.getTweets();
+
+                for (Status tweet : tweets) {
+                    texts.add(tweet.getText().replace("\n\n", "\n"));
+                }
             }
 
             return texts;
@@ -34,9 +38,5 @@ public class TwitterClient {
 
             throw e;
         }
-    }
-
-    private static void init() {
-
     }
 }
